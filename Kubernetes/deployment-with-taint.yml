@@ -1,1 +1,30 @@
+# This file contains the YML configuration for deployment with taint and toleration.
+# Below command to taint the node.
+#   kubectl get nodes
+#   kubectl taint node ip-173-38-39-59 my-taint=Yes:NoSchedule
+#     key=my-taint, value=Yes, effect=NoSchedule 
 
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: ip-app-deployment
+spec: 
+  replicas: 4
+  selector:
+    matchLabels:
+      app: ip-app
+  template:
+    metadata:
+      labels:
+        app: ip-app
+    spec:
+      tolerations: 
+        - key: my-taint
+          operator: Equal
+          value: "Yes"
+          effect: NoSchedule
+      containers:
+        - name: ip-app
+          image: varun/ip-app
+          ports:
+            - containerPort: 8080
