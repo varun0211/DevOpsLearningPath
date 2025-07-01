@@ -1,0 +1,33 @@
+# Configmaps is a namespace object
+
+# configmap.yml
+apiVersion: v1
+kind: configMap
+metadata:
+  name: my-cm
+data:
+  db_url: 192.168.1.1
+  db_user: admin
+
+# pod-cm.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+    - name: ip-app
+      image: varun/ip-app
+      ports:
+        - containerPort: 8080
+      env:
+        - name: DB_URL
+          valueForm:
+            configMapKeyRef:
+              name: my-cm
+              key: db_url
+        - name: DB_USER
+          valueForm:
+            configMapKeyRef:
+              name: my-cm
+              key: db_user
