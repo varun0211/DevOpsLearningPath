@@ -1,0 +1,72 @@
+# In kubernetes presistent volume(pv) and presistent volume claim(pvc), Pod won't get created asa we apply the config file,
+# Pod will look for the request storage in the cluster and wait for the confirmation of required resource (storage) and then 
+# the kube-scheduler will schedule this pod in that specific matched node. 
+
+# Main link
+# https://chatgpt.com/share/68666c02-2f10-800c-93e7-bdea8bd24315
+
+# Thread of main link
+# https://chatgpt.com/s/t_68657c362fb48191a61ef6384926f0f9
+
+# ✅ Step 1: PVC Requests Storage
+#       PVC (which is namespaced) says:
+#       “I need 1Gi of storage with ReadWriteOnce access.”
+#       Kubernetes checks all available PVs (regardless of node) to find one that:
+#       Has enough capacity
+#       Has matching accessModes
+#       Is not already bound
+#       Matches any selector (if defined)
+# ✅ Step 2: PV is Bound (Cluster-wide lookup)
+#       PV is cluster-wide, so Kubernetes checks all PVs to find a match.
+#       Once found, it binds that PV to the PVC — still no pod scheduling yet.
+# ✅ Step 3: Pod Is Scheduled
+#       Now Kubernetes schedules the pod based on where the PV’s data lives:
+#       If the PV uses hostPath, then it is tied to a specific node (say, Node 1).
+#       So Kubernetes must schedule the pod on that specific node.
+#       If it tries to schedule on Node 2 or 3, the mount path won’t exist — it’ll fail.
+
+# pv-local.yml
+apiVersion: v1
+kind: PresistentVolume
+metadata:
+  name: my-pv
+spec:
+  storageClassName: local
+  hostPath: 
+    path: '/home/ubuntu'
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+
+# pvc-local.yml
+apiVersion: v1
+kind: PresistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  storageClassName: local
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+
+# pv-pvc-pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-mount
+spec:
+  containers:
+    - name: ip-app
+      image: varun/ip-app
+      ports:
+        - containerPort: 8080
+      volumeMounts:
+        - name: pvc-vol
+          mountPath: /app/pvc-volume
+  volumes:
+    - name: pvc-vol
+      persistentVolumeClaim:
+        claimName: my-pvc
