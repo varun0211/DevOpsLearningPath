@@ -1,0 +1,22 @@
+# https://chatgpt.com/s/t_68657c362fb48191a61ef6384926f0f9
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-mount
+spec:
+  containers:
+    - name: ip-app
+      image: varun/ip-app
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: hostpath-vol
+          mountPath: /app/volume
+  volumes:
+    - name: hostpath-vol
+      hostPath:
+        path: /home/ubuntu/pod-data
+        type: DirectoryOrCreate
+
+        
